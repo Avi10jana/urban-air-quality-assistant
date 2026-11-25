@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { UserProfile, LifestyleChoice, ImpactAnalysis } from "../../types";
 import { analyzeImpact } from "../../services/api";
-import { Leaf, Plus, Trash2, Loader2, TreePine, AlertCircle } from "lucide-react";
+import { Leaf, Plus, Trash2, Loader2 } from "lucide-react";
 
 interface Props { profile: Partial<UserProfile>; }
 

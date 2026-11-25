@@ -1,4 +1,4 @@
-import type { AQIData, UserProfile, LifestyleChoice, IndoorHacksRequest } from "../types";
+import type { AQIData, UserProfile, LifestyleChoice } from "../types";
 
 const API_BASE = "/api";
 

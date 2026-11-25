@@ -24,8 +24,15 @@ app.use(helmet({
 app.use(requestId);                      // unique request tracing
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
+const allowedOrigins = [CORS_ORIGIN, "http://localhost:5174", "http://127.0.0.1:5173"];
 app.use(cors({
-  origin: [CORS_ORIGIN, "http://localhost:5174", "http://127.0.0.1:5173"],
+  origin: (origin, callback) => {
+    if (!origin || process.env.VERCEL || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
@@ -89,20 +96,23 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
   });
 });
 
-// ─── Start ────────────────────────────────────────────────────────────────────
-const server = app.listen(PORT, () => {
-  console.log(`🌍 Urban Air Quality API running on http://localhost:${PORT}`);
-  // Safe: does not log the key value
-  console.log(`🔑 Gemini API: ${process.env.GEMINI_API_KEY ? "configured" : "NOT configured ⚠️"}`);
-  console.log(`🌐 CORS origin: ${CORS_ORIGIN}`);
-});
+// ─── Start (local / non-serverless) ───────────────────────────────────────────
+if (!process.env.VERCEL) {
+  const server = app.listen(PORT, () => {
+    console.log(`🌍 Urban Air Quality API running on http://localhost:${PORT}`);
+    // Safe: does not log the key value
+    console.log(`🔑 Gemini API: ${process.env.GEMINI_API_KEY ? "configured" : "NOT configured ⚠️"}`);
+    console.log(`🌐 CORS origin: ${CORS_ORIGIN}`);
+  });
 
-// ─── Graceful Shutdown ────────────────────────────────────────────────────────
-const shutdown = () => {
-  console.log("Shutting down gracefully...");
-  server.close(() => { process.exit(0); });
-};
-process.on("SIGTERM", shutdown);
-process.on("SIGINT",  shutdown);
+  // ─── Graceful Shutdown ────────────────────────────────────────────────────────
+  const shutdown = () => {
+    console.log("Shutting down gracefully...");
+    server.close(() => { process.exit(0); });
+  };
+  process.on("SIGTERM", shutdown);
+  process.on("SIGINT", shutdown);
+}
 
 export { app };
+export default app;

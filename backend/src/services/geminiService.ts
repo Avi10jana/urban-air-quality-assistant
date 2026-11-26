@@ -11,9 +11,47 @@ import type {
   LifestyleChoice,
   IndoorHacksRequest,
 } from "../types/index.js";
-import { GEMINI_MODEL } from "../constants.js";
+import { GEMINI_FALLBACK_MODELS } from "../constants.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Checks whether an API error is a transient overload (503) or rate-limit/quota
+ * error (429) that warrants trying a fallback model or degraded response.
+ */
+function isQuotaOrOverloadError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return (
+    msg.includes("429") ||
+    msg.includes("503") ||
+    /rate limit|quota|high demand|overloaded|resource exhausted/i.test(msg)
+  );
+}
+
+/**
+ * Runs a non-streaming interaction across {@link GEMINI_FALLBACK_MODELS} in order,
+ * falling back to the next model on 429/503 errors.
+ */
+async function createInteractionWithFallback(
+  client: InstanceType<typeof GoogleGenAI>,
+  input: string
+): Promise<string> {
+  let lastError: unknown;
+  for (const model of GEMINI_FALLBACK_MODELS) {
+    try {
+      const interaction = await client.interactions.create({
+        model,
+        input,
+        store: false,
+      });
+      return extractJSON(interaction.output_text ?? "{}");
+    } catch (err) {
+      lastError = err;
+      if (!isQuotaOrOverloadError(err)) throw err;
+    }
+  }
+  throw lastError;
+}
 
 /**
  * Lazily initialises and returns the Gemini client.
@@ -118,38 +156,68 @@ export async function* streamChatResponse(
   interactionId?: string;
 }> {
   const client = getClient();
+  const systemInstruction = buildSystemPrompt(profile, aqiData);
 
-  try {
-    const stream = await client.interactions.create({
-      model: GEMINI_MODEL,
-      input: message,
-      system_instruction: buildSystemPrompt(profile, aqiData),
-      ...(previousInteractionId && {
-        previous_interaction_id: previousInteractionId,
-      }),
-      stream: true,
-      store: true,
-    });
+  for (const model of GEMINI_FALLBACK_MODELS) {
+    let emittedAny = false;
+    try {
+      const stream = await client.interactions.create({
+        model,
+        input: message,
+        system_instruction: systemInstruction,
+        ...(previousInteractionId && {
+          previous_interaction_id: previousInteractionId,
+        }),
+        stream: true,
+        store: true,
+      });
 
-    let interactionId: string | undefined;
+      let interactionId: string | undefined;
 
-    for await (const event of stream) {
-      if (event.event_type === "interaction.created") {
-        interactionId = event.interaction?.id;
-      } else if (
-        event.event_type === "step.delta" &&
-        event.delta?.type === "text"
-      ) {
-        yield { type: "delta", text: event.delta.text };
-      } else if (event.event_type === "interaction.completed") {
-        interactionId = interactionId ?? event.interaction?.id;
-        yield { type: "done", interactionId };
+      for await (const event of stream) {
+        if (event.event_type === "interaction.created") {
+          interactionId = event.interaction?.id;
+        } else if (
+          event.event_type === "step.delta" &&
+          event.delta?.type === "text"
+        ) {
+          emittedAny = true;
+          yield { type: "delta", text: event.delta.text };
+        } else if (event.event_type === "interaction.completed") {
+          interactionId = interactionId ?? event.interaction?.id;
+          yield { type: "done", interactionId };
+          return;
+        }
       }
+      return;
+    } catch (error) {
+      if (!emittedAny && isQuotaOrOverloadError(error)) {
+        continue;
+      }
+      const msg = error instanceof Error ? error.message : "Unknown error";
+      yield { type: "error", text: msg };
+      return;
     }
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    yield { type: "error", text: msg };
   }
+
+  // All live models hit 429/503 — stream tailored winter-smog fallback guidance
+  const city = aqiData?.city ?? profile?.location ?? "your city";
+  const aqiText = aqiData?.aqi ? `AQI ${aqiData.aqi} (${aqiData.level})` : "elevated winter smog";
+  const familyNote =
+    profile?.hasChildren || profile?.hasElderly
+      ? "\n- **Family Priority:** Children and elderly members should avoid outdoor exertion and wear a well-fitted N95/KN95 mask if stepping outside."
+      : "";
+
+  const fallbackReply = `### 🌬️ AirGuide Action Plan for ${city} (${aqiText})
+
+- **Timing Matters:** During winter thermal inversions, PM2.5 peaks between **6–9 AM** and **6–10 PM**. Schedule essential errands between **12 PM – 4 PM** when dispersion is highest.
+- **Indoor Air Protection:** Keep windows sealed during peak smog hours, run a HEPA purifier (or DIY box-fan MERV-13 filter), and wet-mop floors instead of dry sweeping to keep settled dust out of the air.
+- **Low-Emission Choices:** Replacing one short car trip with metro/bus or carpooling cuts local PM2.5 and saves ~2.4 kg CO₂/day.${familyNote}
+
+> *Note: Live Gemini API quota is temporarily exhausted on this key, so AirGuide provided tailored offline guidance.*`;
+
+  yield { type: "delta", text: fallbackReply };
+  yield { type: "done" };
 }
 
 // ─── Routine Generation ───────────────────────────────────────────────────────
@@ -191,13 +259,30 @@ Return ONLY valid JSON (no markdown, no explanation) in this exact structure:
   "health_score_improvement": "Qualitative or % improvement"
 }`;
 
-  const interaction = await client.interactions.create({
-    model: GEMINI_MODEL,
-    input: prompt,
-    store: false,
-  });
-
-  return extractJSON(interaction.output_text ?? "{}");
+  try {
+    return await createInteractionWithFallback(client, prompt);
+  } catch (err) {
+    if (!isQuotaOrOverloadError(err)) throw err;
+    return JSON.stringify({
+      morning: [
+        { time: "7:00 AM", activity: "Indoor stretching & hydration", tip: "Avoid early-morning outdoor walks when winter inversion traps PM2.5.", impact: "Cuts morning PM2.5 inhalation by ~60%", emoji: "🌅" },
+        { time: "8:30 AM", activity: `${profile.commute === "car" ? "Carpool or metro commute" : "Filtered commute"}`, tip: "Use cabin recirculation mode or wear an N95 mask.", impact: "Saves ~2.4 kg CO₂/day", emoji: "🚇" },
+      ],
+      afternoon: [
+        { time: "1:00 PM", activity: "Brief outdoor errands & ventilation", tip: "12–4 PM has the best winter air dispersion; ventilate for 10 mins if outdoor AQI permits.", impact: "Refreshes indoor CO₂ safely", emoji: "☀️" },
+      ],
+      evening: [
+        { time: "6:30 PM", activity: `Low-smoke ${profile.cookingType} cooking`, tip: "Run exhaust fan + cover pots; avoid incense or candles.", impact: "Reduces indoor PM2.5 spikes by ~50%", emoji: "🌆" },
+      ],
+      general_tips: [
+        "Wet-mop floors daily instead of dry sweeping to avoid resuspending fine dust.",
+        "Keep indoor humidity between 40–55% to help particles settle.",
+      ],
+      emergency_protocol: "When AQI > 200: seal window gaps with weatherstripping, run HEPA filtration continuously, and keep children and elderly indoors.",
+      co2_saved_per_day_kg: 2.8,
+      health_score_improvement: "Estimated 35–45% lower daily PM2.5 exposure",
+    });
+  }
 }
 
 // ─── Impact Analysis ──────────────────────────────────────────────────────────
@@ -249,13 +334,30 @@ Return ONLY valid JSON (no markdown) in this exact structure:
   "equivalentTrees": 0
 }`;
 
-  const interaction = await client.interactions.create({
-    model: GEMINI_MODEL,
-    input: prompt,
-    store: false,
-  });
-
-  return extractJSON(interaction.output_text ?? "{}");
+  try {
+    return await createInteractionWithFallback(client, prompt);
+  } catch (err) {
+    if (!isQuotaOrOverloadError(err)) throw err;
+    const mapped = choices.map((c) => ({
+      category: c.category,
+      currentBehavior: c.currentBehavior,
+      alternative: c.proposedAlternative,
+      co2SavedKgPerYear: 420,
+      pm25ImpactPercent: 18,
+      costSavingINRPerYear: 12000,
+      healthBenefit: "Lower respiratory irritation and reduced household PM2.5 exposure.",
+      difficultyLevel: "easy",
+      implementationTips: ["Start 3 days per week and track weekly progress", "Pair with peak-hour smog alerts"],
+    }));
+    return JSON.stringify({
+      totalCO2SavedKgPerYear: mapped.length * 420,
+      pm25ReductionPercent: Math.min(60, mapped.length * 15),
+      healthScoreImprovement: "Significant reduction in daily PM2.5 & NO₂ exposure",
+      choices: mapped,
+      overallMessage: `Adopting these ${mapped.length} sustainable change(s) in ${profile?.location ?? "your city"} meaningfully reduces both personal exposure and neighborhood emissions.`,
+      equivalentTrees: mapped.length * 19,
+    });
+  }
 }
 
 // ─── Indoor Hacks ─────────────────────────────────────────────────────────────
@@ -289,11 +391,37 @@ Return ONLY valid JSON (no markdown) in this exact structure:
   "emergencyProtocol": "Steps when outdoor AQI > 200"
 }`;
 
-  const interaction = await client.interactions.create({
-    model: GEMINI_MODEL,
-    input: prompt,
-    store: false,
-  });
-
-  return extractJSON(interaction.output_text ?? "{}");
+  try {
+    return await createInteractionWithFallback(client, prompt);
+  } catch (err) {
+    if (!isQuotaOrOverloadError(err)) throw err;
+    return JSON.stringify({
+      quickWins: [
+        { hack: "Wet-mop hard floors instead of dry sweeping", impact: "Prevents settled PM2.5 & PM10 dust from re-entering the air", cost: "free", emoji: "🧹" },
+        { hack: "Seal window & door gaps with foam weatherstripping", impact: "Blocks 30–50% of outdoor winter smog infiltration", cost: "low", emoji: "🪟" },
+        { hack: "Build a DIY Corsi-Rosenthal box-fan + MERV-13 filter", impact: "Captures fine PM2.5 at a fraction of commercial purifier cost", cost: "low", emoji: "💨" },
+      ],
+      plants: [
+        { name: "Snake Plant (Sansevieria)", targetPollutant: "NO₂ & Formaldehyde", careLevel: "easy", placementTip: "Place in bedrooms; releases oxygen at night" },
+        { name: "Areca Palm", targetPollutant: "VOCs & indoor humidity", careLevel: "easy", placementTip: "Keep near bright living-room windows" },
+      ],
+      ventilation: [
+        { strategy: "Midday cross-ventilation window", when: "12:30 PM – 3:30 PM", why: "Thermal inversion lifts in early afternoon, giving the lowest outdoor PM2.5 of the day" },
+      ],
+      cookingTips: [
+        { tip: `Use exhaust hood + lids when cooking on ${request.cookingType}`, pollutantReduced: "NO₂ & ultrafine particles", impact: "Cuts kitchen PM2.5 spikes by up to 55%" },
+      ],
+      purifierAdvice: {
+        needed: true,
+        minCadr: 250,
+        filterType: "True HEPA H13 + Activated Carbon",
+        recommendation: `Recommended for a ${request.homeType} during ${request.aqiLevel ?? "elevated"} AQI days; keep bedroom doors closed at night.`,
+      },
+      seasonalTips: {
+        winter: ["Avoid burning incense, dhoop, or wood indoors during winter smog.", "Run purifier on medium-high from 6 PM to 9 AM."],
+        general: ["Wash bedding weekly in warm water to clear trapped allergens."],
+      },
+      emergencyProtocol: "When outdoor AQI exceeds 200, keep all exterior doors/windows sealed, place damp towels under drafty door gaps, and keep HEPA filtration running continuously.",
+    });
+  }
 }

@@ -40,6 +40,13 @@ export const AQI_CACHE_TTL_MS = 5 * 60 * 1000;
 /** Gemini model to use */
 export const GEMINI_MODEL = "gemini-4-hydrogen";
 
+/** Ordered fallback models when primary hits 429 quota or 503 high demand */
+export const GEMINI_FALLBACK_MODELS = [
+  GEMINI_MODEL,
+  "gemini-3.5-flash-lite",
+  "gemini-3.1-flash-lite",
+] as const;
+
 /** Rate limit: chat requests per 15 minutes */
 export const CHAT_RATE_LIMIT = 50;
 

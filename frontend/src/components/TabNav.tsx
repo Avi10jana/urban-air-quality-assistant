@@ -22,14 +22,16 @@ export function TabNav({ activeTab, onTabChange }: Props) {
       role="navigation"
       aria-label="Main navigation"
       style={{
-        background: "var(--surface)", borderBottom: "1px solid var(--border)",
-        position: "sticky", top: 60, zIndex: 90,
+        background: "var(--surface-glass)",
+        backdropFilter: "blur(12px)",
+        borderBottom: "1px solid var(--border)",
+        position: "sticky", top: 64, zIndex: 90,
         boxShadow: "var(--shadow)",
       }}
     >
       <div
         role="tablist"
-        style={{ maxWidth: 1100, margin: "0 auto", display: "flex", overflowX: "auto", gap: "0.25rem", padding: "0 0.75rem" }}
+        style={{ maxWidth: 1100, margin: "0 auto", display: "flex", overflowX: "auto", gap: "0.35rem", padding: "0.45rem 0.75rem" }}
       >
         {TABS.map((tab) => {
           const isActive = tab.id === activeTab;
@@ -41,16 +43,26 @@ export function TabNav({ activeTab, onTabChange }: Props) {
               aria-controls={`panel-${tab.id}`}
               onClick={() => onTabChange(tab.id)}
               style={{
-                display: "flex", alignItems: "center", gap: "0.4rem",
-                padding: "0.75rem 1rem", border: "none", cursor: "pointer",
-                background: "transparent", fontSize: "0.875rem", fontWeight: isActive ? 600 : 400,
+                display: "flex", alignItems: "center", gap: "0.45rem",
+                padding: "0.55rem 1rem", border: "none", cursor: "pointer",
+                borderRadius: "10px",
+                background: isActive ? "var(--sky-light)" : "transparent",
+                fontSize: "0.875rem", fontWeight: isActive ? 600 : 500,
                 color: isActive ? "var(--sky-dark)" : "var(--text-2)",
-                borderBottom: isActive ? "2px solid var(--sky)" : "2px solid transparent",
-                transition: "all 0.15s", whiteSpace: "nowrap",
-                marginBottom: "-1px",
+                transition: "all 0.15s ease", whiteSpace: "nowrap",
               }}
-              onMouseOver={(e) => { if (!isActive) e.currentTarget.style.color = "var(--sky)"; }}
-              onMouseOut={(e) => { if (!isActive) e.currentTarget.style.color = "var(--text-2)"; }}
+              onMouseOver={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.color = "var(--sky-dark)";
+                  e.currentTarget.style.background = "var(--surface-2)";
+                }
+              }}
+              onMouseOut={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.color = "var(--text-2)";
+                  e.currentTarget.style.background = "transparent";
+                }
+              }}
             >
               {tab.icon}
               {tab.label}

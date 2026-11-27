@@ -45,34 +45,28 @@ export function ProfileSetup({ onSave }: Props) {
     if (validate()) onSave({ ...form, name: form.name || undefined });
   };
 
-  const inputStyle: React.CSSProperties = {
-    width: "100%", padding: "0.6rem 0.9rem", border: "1px solid var(--border)",
-    borderRadius: 8, fontSize: "0.9rem", background: "var(--surface)", color: "var(--text)",
-    transition: "border-color 0.2s", outline: "none",
-  };
-
   const labelStyle: React.CSSProperties = {
     display: "block", fontSize: "0.82rem", fontWeight: 600,
     color: "var(--text-2)", marginBottom: "0.4rem",
   };
 
-  const sectionStyle: React.CSSProperties = {
-    background: "var(--surface)", borderRadius: 12, padding: "1.25rem",
-    border: "1px solid var(--border)", boxShadow: "var(--shadow)",
-  };
-
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #e0f2fe 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem 1rem" }}>
-      <div style={{ width: "100%", maxWidth: 600, animationName: "fadeIn", animationDuration: "0.5s" }}>
+    <div style={{ minHeight: "100vh", background: "var(--grad-hero-bg)", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem 1rem" }}>
+      <div className="animate-fade-in" style={{ width: "100%", maxWidth: 640 }}>
         {/* Hero */}
-        <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 64, height: 64, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9, #0284c7)", marginBottom: "1rem", boxShadow: "0 4px 14px rgba(14,165,233,.4)" }}>
-            <Wind size={32} color="white" aria-hidden="true" />
+        <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
+          <div style={{
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            width: 68, height: 68, borderRadius: "20px",
+            background: "var(--grad-brand)", marginBottom: "1rem",
+            boxShadow: "0 10px 28px rgba(14, 165, 233, 0.35)",
+          }}>
+            <Wind size={34} color="white" aria-hidden="true" />
           </div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "#0c4a6e", marginBottom: "0.4rem" }}>
+          <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "var(--text)", marginBottom: "0.45rem" }}>
             Welcome to AirGuide
           </h1>
-          <p style={{ color: "#0369a1", fontSize: "0.95rem" }}>
+          <p style={{ color: "var(--text-2)", fontSize: "0.95rem", maxWidth: 460, margin: "0 auto" }}>
             Your GenAI-powered Urban Air Quality Assistant.<br />
             Tell us about yourself so we can personalize your advice.
           </p>
@@ -81,61 +75,71 @@ export function ProfileSetup({ onSave }: Props) {
         <form onSubmit={handleSubmit} noValidate>
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             {/* Basic Info */}
-            <section style={sectionStyle} aria-labelledby="basic-heading">
-              <h2 id="basic-heading" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "1rem", fontWeight: 600, color: "var(--sky-dark)", marginBottom: "1rem" }}>
+            <section className="ag-card" aria-labelledby="basic-heading">
+              <h2 id="basic-heading" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "1rem", fontWeight: 700, color: "var(--sky-dark)", marginBottom: "1rem" }}>
                 <MapPin size={18} aria-hidden="true" /> Basic Information
               </h2>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+              <div className="ag-grid-2">
                 <div>
                   <label htmlFor="name" style={labelStyle}>Your Name (optional)</label>
-                  <input id="name" style={inputStyle} placeholder="e.g. Priya" value={form.name ?? ""} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} onFocus={(e) => (e.target.style.borderColor = "var(--sky)")} onBlur={(e) => (e.target.style.borderColor = "var(--border)")} />
+                  <input id="name" className="ag-input" placeholder="e.g. Priya" value={form.name ?? ""} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
                 </div>
                 <div>
                   <label htmlFor="location" style={labelStyle}>City / Location *</label>
-                  <input id="location" required aria-required="true" aria-describedby={errors.location ? "loc-error" : undefined} style={{ ...inputStyle, borderColor: errors.location ? "#ef4444" : "var(--border)" }} placeholder="e.g. Delhi, Mumbai" value={form.location} onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))} onFocus={(e) => (e.target.style.borderColor = errors.location ? "#ef4444" : "var(--sky)")} onBlur={(e) => (e.target.style.borderColor = errors.location ? "#ef4444" : "var(--border)")} />
-                  {errors.location && <p id="loc-error" role="alert" style={{ color: "#ef4444", fontSize: "0.75rem", marginTop: "0.25rem" }}>{errors.location}</p>}
+                  <input
+                    id="location"
+                    required
+                    aria-required="true"
+                    aria-describedby={errors.location ? "loc-error" : undefined}
+                    className="ag-input"
+                    style={{ borderColor: errors.location ? "var(--unhealthy)" : undefined }}
+                    placeholder="e.g. Delhi, Mumbai"
+                    value={form.location}
+                    onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
+                  />
+                  {errors.location && <p id="loc-error" role="alert" style={{ color: "var(--error-text)", fontSize: "0.78rem", marginTop: "0.3rem", fontWeight: 500 }}>{errors.location}</p>}
                 </div>
               </div>
             </section>
 
             {/* Family */}
-            <section style={sectionStyle} aria-labelledby="family-heading">
-              <h2 id="family-heading" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "1rem", fontWeight: 600, color: "var(--sky-dark)", marginBottom: "1rem" }}>
+            <section className="ag-card" aria-labelledby="family-heading">
+              <h2 id="family-heading" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "1rem", fontWeight: 700, color: "var(--sky-dark)", marginBottom: "1rem" }}>
                 <Users size={18} aria-hidden="true" /> Family & Lifestyle
               </h2>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+              <div className="ag-grid-2">
                 <div>
                   <label htmlFor="familySize" style={labelStyle}>Family Size</label>
-                  <input id="familySize" type="number" min={1} max={20} style={inputStyle} value={form.familySize} onChange={(e) => setForm((f) => ({ ...f, familySize: parseInt(e.target.value) || 1 }))} onFocus={(e) => (e.target.style.borderColor = "var(--sky)")} onBlur={(e) => (e.target.style.borderColor = "var(--border)")} />
+                  <input id="familySize" type="number" min={1} max={20} className="ag-input" value={form.familySize} onChange={(e) => setForm((f) => ({ ...f, familySize: parseInt(e.target.value) || 1 }))} />
                 </div>
                 <div>
                   <label htmlFor="lifestyle" style={labelStyle}>Area Type</label>
-                  <select id="lifestyle" style={inputStyle} value={form.lifestyle} onChange={(e) => setForm((f) => ({ ...f, lifestyle: e.target.value as LifestyleType }))} onFocus={(e) => (e.target.style.borderColor = "var(--sky)")} onBlur={(e) => (e.target.style.borderColor = "var(--border)")}>
+                  <select id="lifestyle" className="ag-input" value={form.lifestyle} onChange={(e) => setForm((f) => ({ ...f, lifestyle: e.target.value as LifestyleType }))}>
                     <option value="urban">Urban (City)</option>
                     <option value="suburban">Suburban</option>
                     <option value="rural">Rural</option>
                   </select>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <input type="checkbox" id="hasChildren" checked={form.hasChildren} onChange={(e) => setForm((f) => ({ ...f, hasChildren: e.target.checked }))} style={{ width: 16, height: 16, accentColor: "var(--sky)", cursor: "pointer" }} />
+                <div style={{ display: "flex", alignItems: "center", gap: "0.55rem", paddingTop: "0.25rem" }}>
+                  <input type="checkbox" id="hasChildren" checked={form.hasChildren} onChange={(e) => setForm((f) => ({ ...f, hasChildren: e.target.checked }))} style={{ width: 17, height: 17, accentColor: "var(--sky)", cursor: "pointer" }} />
                   <label htmlFor="hasChildren" style={{ ...labelStyle, marginBottom: 0, cursor: "pointer" }}>👶 Has Children</label>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <input type="checkbox" id="hasElderly" checked={form.hasElderly} onChange={(e) => setForm((f) => ({ ...f, hasElderly: e.target.checked }))} style={{ width: 16, height: 16, accentColor: "var(--sky)", cursor: "pointer" }} />
+                <div style={{ display: "flex", alignItems: "center", gap: "0.55rem", paddingTop: "0.25rem" }}>
+                  <input type="checkbox" id="hasElderly" checked={form.hasElderly} onChange={(e) => setForm((f) => ({ ...f, hasElderly: e.target.checked }))} style={{ width: 17, height: 17, accentColor: "var(--sky)", cursor: "pointer" }} />
                   <label htmlFor="hasElderly" style={{ ...labelStyle, marginBottom: 0, cursor: "pointer" }}>👴 Has Elderly</label>
                 </div>
               </div>
             </section>
 
             {/* Home & Commute */}
-            <section style={sectionStyle} aria-labelledby="home-heading">
-              <h2 id="home-heading" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "1rem", fontWeight: 600, color: "var(--sky-dark)", marginBottom: "1rem" }}>
+            <section className="ag-card" aria-labelledby="home-heading">
+              <h2 id="home-heading" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "1rem", fontWeight: 700, color: "var(--sky-dark)", marginBottom: "1rem" }}>
                 🏠 Home & Commute
               </h2>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem" }}>
+              <div className="ag-grid-3">
                 <div>
                   <label htmlFor="homeType" style={labelStyle}>Home Type</label>
-                  <select id="homeType" style={inputStyle} value={form.homeType} onChange={(e) => setForm((f) => ({ ...f, homeType: e.target.value as HomeType }))} onFocus={(e) => (e.target.style.borderColor = "var(--sky)")} onBlur={(e) => (e.target.style.borderColor = "var(--border)")}>
+                  <select id="homeType" className="ag-input" value={form.homeType} onChange={(e) => setForm((f) => ({ ...f, homeType: e.target.value as HomeType }))}>
                     <option value="apartment">Apartment</option>
                     <option value="house">House</option>
                     <option value="studio">Studio</option>
@@ -143,7 +147,7 @@ export function ProfileSetup({ onSave }: Props) {
                 </div>
                 <div>
                   <label htmlFor="cookingType" style={labelStyle}>Cooking Type</label>
-                  <select id="cookingType" style={inputStyle} value={form.cookingType} onChange={(e) => setForm((f) => ({ ...f, cookingType: e.target.value as CookingType }))} onFocus={(e) => (e.target.style.borderColor = "var(--sky)")} onBlur={(e) => (e.target.style.borderColor = "var(--border)")}>
+                  <select id="cookingType" className="ag-input" value={form.cookingType} onChange={(e) => setForm((f) => ({ ...f, cookingType: e.target.value as CookingType }))}>
                     <option value="gas">Gas Stove</option>
                     <option value="electric">Electric</option>
                     <option value="induction">Induction</option>
@@ -151,7 +155,7 @@ export function ProfileSetup({ onSave }: Props) {
                 </div>
                 <div>
                   <label htmlFor="commute" style={labelStyle}>Daily Commute</label>
-                  <select id="commute" style={inputStyle} value={form.commute} onChange={(e) => setForm((f) => ({ ...f, commute: e.target.value as CommuteType }))} onFocus={(e) => (e.target.style.borderColor = "var(--sky)")} onBlur={(e) => (e.target.style.borderColor = "var(--border)")}>
+                  <select id="commute" className="ag-input" value={form.commute} onChange={(e) => setForm((f) => ({ ...f, commute: e.target.value as CommuteType }))}>
                     <option value="car">🚗 Car</option>
                     <option value="public_transport">🚌 Public Transport</option>
                     <option value="walking">🚶 Walking</option>
@@ -163,11 +167,11 @@ export function ProfileSetup({ onSave }: Props) {
             </section>
 
             {/* Concerns */}
-            <section style={sectionStyle} aria-labelledby="concerns-heading">
-              <h2 id="concerns-heading" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "1rem", fontWeight: 600, color: "var(--sky-dark)", marginBottom: "0.75rem" }}>
+            <section className="ag-card" aria-labelledby="concerns-heading">
+              <h2 id="concerns-heading" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "1rem", fontWeight: 700, color: "var(--sky-dark)", marginBottom: "0.5rem" }}>
                 <AlertCircle size={18} aria-hidden="true" /> Your Air Quality Concerns
               </h2>
-              <p style={{ fontSize: "0.8rem", color: "var(--text-3)", marginBottom: "0.75rem" }}>Select all that apply</p>
+              <p style={{ fontSize: "0.82rem", color: "var(--text-3)", marginBottom: "0.85rem" }}>Select all that apply</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }} role="group" aria-labelledby="concerns-heading">
                 {CONCERNS.map((c) => {
                   const selected = form.currentConcerns.includes(c);
@@ -177,12 +181,12 @@ export function ProfileSetup({ onSave }: Props) {
                       onClick={() => toggle(c)}
                       aria-pressed={selected}
                       style={{
-                        padding: "0.35rem 0.8rem", borderRadius: "999px", fontSize: "0.8rem",
+                        padding: "0.4rem 0.9rem", borderRadius: "999px", fontSize: "0.82rem",
                         border: `1px solid ${selected ? "var(--sky)" : "var(--border)"}`,
-                        background: selected ? "var(--sky-light)" : "transparent",
+                        background: selected ? "var(--sky-light)" : "var(--surface-2)",
                         color: selected ? "var(--sky-dark)" : "var(--text-2)",
-                        fontWeight: selected ? 600 : 400,
-                        cursor: "pointer", transition: "all 0.15s",
+                        fontWeight: selected ? 600 : 500,
+                        cursor: "pointer", transition: "all 0.15s ease",
                       }}
                     >
                       {c}
@@ -194,15 +198,8 @@ export function ProfileSetup({ onSave }: Props) {
 
             <button
               type="submit"
-              style={{
-                background: "linear-gradient(135deg, #0ea5e9, #0284c7)", color: "white",
-                border: "none", borderRadius: 12, padding: "0.9rem",
-                fontSize: "1rem", fontWeight: 600, cursor: "pointer",
-                boxShadow: "0 4px 14px rgba(14,165,233,.4)",
-                transition: "transform 0.15s, box-shadow 0.15s",
-              }}
-              onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 18px rgba(14,165,233,.5)"; }}
-              onMouseOut={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 4px 14px rgba(14,165,233,.4)"; }}
+              className="ag-btn-primary"
+              style={{ padding: "0.95rem 1.5rem", fontSize: "1rem", borderRadius: "14px", width: "100%" }}
             >
               🚀 Start My Air Quality Journey
             </button>

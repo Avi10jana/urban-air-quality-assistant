@@ -14,9 +14,13 @@ const PRESETS: LifestyleChoice[] = [
 ];
 
 function DifficultyBadge({ level }: { level: string }) {
-  const colors = { easy: { bg: "#f0fdf4", text: "#16a34a", border: "#86efac" }, medium: { bg: "#fff7ed", text: "#c2410c", border: "#fdba74" }, hard: { bg: "#fef2f2", text: "#dc2626", border: "#fecaca" } };
+  const colors = {
+    easy: { bg: "var(--success-bg)", text: "var(--success-text)", border: "var(--success-border)" },
+    medium: { bg: "var(--alert-bg)", text: "var(--alert-title)", border: "var(--alert-border)" },
+    hard: { bg: "var(--error-bg)", text: "var(--error-text)", border: "var(--error-border)" },
+  };
   const c = colors[level as keyof typeof colors] ?? colors.medium;
-  return <span style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}`, padding: "0.15rem 0.5rem", borderRadius: 999, fontSize: "0.7rem", fontWeight: 600 }}>{level}</span>;
+  return <span style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}`, padding: "0.18rem 0.6rem", borderRadius: 999, fontSize: "0.72rem", fontWeight: 600 }}>{level}</span>;
 }
 
 export function ImpactPanel({ profile }: Props) {
@@ -44,47 +48,57 @@ export function ImpactPanel({ profile }: Props) {
     }
   };
 
-  const card: React.CSSProperties = { background: "var(--surface)", borderRadius: 12, padding: "1.25rem", border: "1px solid var(--border)", boxShadow: "var(--shadow)" };
-  const inputStyle: React.CSSProperties = { width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--border)", borderRadius: 8, fontSize: "0.82rem", fontFamily: "inherit", outline: "none" };
-
   return (
-    <div id="panel-impact" role="tabpanel" aria-label="My Impact" style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+    <div id="panel-impact" role="tabpanel" aria-label="My Impact" className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
       <div>
-        <h1 style={{ fontSize: "1.3rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <Leaf size={22} aria-hidden="true" /> My Environmental Impact
+        <h1 style={{ fontSize: "1.45rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text)" }}>
+          <Leaf size={22} style={{ color: "var(--good)" }} aria-hidden="true" /> My Environmental Impact
         </h1>
-        <p style={{ color: "var(--text-2)", fontSize: "0.85rem" }}>See the CO₂ and health benefits of switching to greener alternatives</p>
+        <p style={{ color: "var(--text-2)", fontSize: "0.86rem" }}>See the CO₂ and health benefits of switching to greener alternatives</p>
       </div>
 
       {/* Choices editor */}
-      <div style={card}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-          <h2 style={{ fontWeight: 600, fontSize: "0.95rem" }}>Your Lifestyle Changes</h2>
-          <button onClick={addChoice} style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.8rem", border: "1px solid var(--sky)", borderRadius: 8, background: "var(--sky-light)", cursor: "pointer", fontSize: "0.8rem", color: "var(--sky-dark)", fontWeight: 500 }} aria-label="Add a new lifestyle change">
+      <div className="ag-card">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
+          <h2 style={{ fontWeight: 700, fontSize: "0.98rem", color: "var(--text)" }}>Your Lifestyle Changes</h2>
+          <button
+            onClick={addChoice}
+            style={{
+              display: "flex", alignItems: "center", gap: "0.4rem",
+              padding: "0.45rem 0.85rem", border: "1px solid var(--sky)", borderRadius: 8,
+              background: "var(--sky-light)", cursor: "pointer", fontSize: "0.8rem",
+              color: "var(--sky-dark)", fontWeight: 600,
+            }}
+            aria-label="Add a new lifestyle change"
+          >
             <Plus size={14} aria-hidden="true" /> Add Change
           </button>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
           {choices.map((choice, i) => (
-            <div key={i} style={{ padding: "0.75rem", border: "1px solid var(--border)", borderRadius: 10, background: "var(--surface-2)" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "120px 1fr 1fr auto", gap: "0.5rem", alignItems: "start" }}>
-                <select value={choice.category} onChange={(e) => updateChoice(i, "category", e.target.value)} style={inputStyle} aria-label={`Category for change ${i + 1}`}>
+            <div key={i} style={{ padding: "0.8rem", border: "1px solid var(--border)", borderRadius: 10, background: "var(--surface-2)" }}>
+              <div className="ag-impact-row">
+                <select className="ag-input" value={choice.category} onChange={(e) => updateChoice(i, "category", e.target.value)} aria-label={`Category for change ${i + 1}`}>
                   {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
                 </select>
-                <input placeholder="Current behavior…" value={choice.currentBehavior} onChange={(e) => updateChoice(i, "currentBehavior", e.target.value)} style={inputStyle} aria-label={`Current behavior for change ${i + 1}`} onFocus={(e) => (e.target.style.borderColor = "var(--sky)")} onBlur={(e) => (e.target.style.borderColor = "var(--border)")} />
-                <input placeholder="Proposed alternative…" value={choice.proposedAlternative} onChange={(e) => updateChoice(i, "proposedAlternative", e.target.value)} style={inputStyle} aria-label={`Proposed alternative for change ${i + 1}`} onFocus={(e) => (e.target.style.borderColor = "var(--sky)")} onBlur={(e) => (e.target.style.borderColor = "var(--border)")} />
+                <input className="ag-input" placeholder="Current behavior…" value={choice.currentBehavior} onChange={(e) => updateChoice(i, "currentBehavior", e.target.value)} aria-label={`Current behavior for change ${i + 1}`} />
+                <input className="ag-input" placeholder="Proposed alternative…" value={choice.proposedAlternative} onChange={(e) => updateChoice(i, "proposedAlternative", e.target.value)} aria-label={`Proposed alternative for change ${i + 1}`} />
                 <button onClick={() => removeChoice(i)} style={{ padding: "0.5rem", border: "none", background: "none", cursor: "pointer", color: "var(--text-3)", borderRadius: 6 }} aria-label={`Remove change ${i + 1}`}>
-                  <Trash2 size={15} aria-hidden="true" />
+                  <Trash2 size={16} aria-hidden="true" />
                 </button>
               </div>
             </div>
           ))}
         </div>
-        {error && <p role="alert" style={{ color: "#dc2626", fontSize: "0.8rem", marginTop: "0.75rem" }}>{error}</p>}
+        {error && <p role="alert" style={{ color: "var(--error-text)", fontSize: "0.82rem", marginTop: "0.75rem" }}>{error}</p>}
         <button
           onClick={handleAnalyze}
           disabled={loading}
-          style={{ marginTop: "1rem", width: "100%", padding: "0.75rem", background: loading ? "var(--border)" : "linear-gradient(135deg, #22c55e, #16a34a)", color: "white", border: "none", borderRadius: 10, cursor: loading ? "not-allowed" : "pointer", fontWeight: 600, fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
+          className="ag-btn-primary"
+          style={{
+            marginTop: "1rem", width: "100%", padding: "0.8rem", fontSize: "0.92rem",
+            background: loading ? undefined : "var(--grad-eco)",
+          }}
           aria-busy={loading}
         >
           {loading ? <><Loader2 size={16} className="animate-spin" aria-hidden="true" /> Analyzing...</> : <><Leaf size={16} aria-hidden="true" /> Calculate My Impact</>}
@@ -93,58 +107,58 @@ export function ImpactPanel({ profile }: Props) {
 
       {/* Results */}
       {result && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", animationName: "fadeIn", animationDuration: "0.4s" }}>
+        <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           {/* Summary */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
+          <div className="ag-grid-3">
             {[
-              { icon: "🌿", value: `${result.totalCO2SavedKgPerYear?.toFixed(0) ?? 0} kg`, label: "CO₂ Saved / Year", color: "#16a34a", bg: "#f0fdf4" },
-              { icon: "🌳", value: `${result.equivalentTrees ?? 0}`, label: "Equivalent Trees", color: "#15803d", bg: "#dcfce7" },
-              { icon: "💪", value: `${result.pm25ReductionPercent ?? 0}%`, label: "PM2.5 Exposure Cut", color: "#0284c7", bg: "#e0f2fe" },
+              { icon: "🌿", value: `${result.totalCO2SavedKgPerYear?.toFixed(0) ?? 0} kg`, label: "CO₂ Saved / Year", color: "var(--success-text)", bg: "var(--success-bg)", border: "var(--success-border)" },
+              { icon: "🌳", value: `${result.equivalentTrees ?? 0}`, label: "Equivalent Trees", color: "var(--good)", bg: "var(--success-bg)", border: "var(--success-border)" },
+              { icon: "💪", value: `${result.pm25ReductionPercent ?? 0}%`, label: "PM2.5 Exposure Cut", color: "var(--info-text)", bg: "var(--info-bg)", border: "var(--info-border)" },
             ].map((s) => (
-              <div key={s.label} style={{ ...card, background: s.bg, borderColor: `${s.color}44`, textAlign: "center" }}>
-                <div style={{ fontSize: "1.5rem", marginBottom: "0.4rem" }}>{s.icon}</div>
-                <div style={{ fontSize: "1.5rem", fontWeight: 800, color: s.color }}>{s.value}</div>
-                <div style={{ fontSize: "0.75rem", color: s.color, opacity: 0.8 }}>{s.label}</div>
+              <div key={s.label} className="ag-card" style={{ background: s.bg, borderColor: s.border, textAlign: "center" }}>
+                <div style={{ fontSize: "1.55rem", marginBottom: "0.4rem" }}>{s.icon}</div>
+                <div className="font-display" style={{ fontSize: "1.55rem", fontWeight: 800, color: s.color }}>{s.value}</div>
+                <div style={{ fontSize: "0.76rem", color: s.color, fontWeight: 600 }}>{s.label}</div>
               </div>
             ))}
           </div>
 
-          <div style={{ ...card, background: "linear-gradient(135deg, #f0fdf4, #dcfce7)", borderColor: "#86efac" }}>
-            <p style={{ color: "#166534", fontWeight: 500, fontSize: "0.9rem" }}>🎉 {result.overallMessage}</p>
-            <p style={{ color: "#16a34a", fontSize: "0.82rem", marginTop: "0.4rem" }}>Health Improvement: {result.healthScoreImprovement}</p>
+          <div className="ag-card" style={{ background: "var(--success-bg)", borderColor: "var(--success-border)" }}>
+            <p style={{ color: "var(--success-text)", fontWeight: 600, fontSize: "0.92rem" }}>🎉 {result.overallMessage}</p>
+            <p style={{ color: "var(--success-text)", fontSize: "0.84rem", marginTop: "0.4rem", opacity: 0.9 }}>Health Improvement: {result.healthScoreImprovement}</p>
           </div>
 
           {/* Per-choice breakdown */}
           {result.choices?.map((c, i) => (
-            <div key={i} style={card}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
+            <div key={i} className="ag-card">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.85rem", gap: "0.5rem" }}>
                 <div>
-                  <span style={{ fontSize: "0.73rem", fontWeight: 600, background: "var(--sky-light)", color: "var(--sky-dark)", padding: "0.1rem 0.5rem", borderRadius: 999 }}>{c.category}</span>
-                  <div style={{ marginTop: "0.4rem", fontSize: "0.85rem" }}>
+                  <span style={{ fontSize: "0.73rem", fontWeight: 600, background: "var(--sky-light)", color: "var(--sky-dark)", padding: "0.15rem 0.55rem", borderRadius: 999 }}>{c.category}</span>
+                  <div style={{ marginTop: "0.45rem", fontSize: "0.87rem" }}>
                     <span style={{ color: "var(--text-3)", textDecoration: "line-through" }}>{c.currentBehavior}</span>
-                    <span style={{ margin: "0 0.5rem", color: "var(--sky)" }}>→</span>
-                    <span style={{ fontWeight: 500 }}>{c.alternative}</span>
+                    <span style={{ margin: "0 0.5rem", color: "var(--sky)", fontWeight: 700 }}>→</span>
+                    <span style={{ fontWeight: 600, color: "var(--text)" }}>{c.alternative}</span>
                   </div>
                 </div>
                 <DifficultyBadge level={c.difficultyLevel} />
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem", marginBottom: "0.75rem" }}>
+              <div className="ag-grid-3" style={{ marginBottom: "0.8rem" }}>
                 {[
-                  { label: "CO₂ Saved", value: `${c.co2SavedKgPerYear?.toFixed(0) ?? 0} kg/yr`, color: "#16a34a" },
-                  { label: "PM2.5 Cut", value: `${c.pm25ImpactPercent ?? 0}%`, color: "#0284c7" },
-                  { label: "Cost Saved", value: `₹${c.costSavingINRPerYear?.toFixed(0) ?? 0}/yr`, color: "#7c3aed" },
+                  { label: "CO₂ Saved", value: `${c.co2SavedKgPerYear?.toFixed(0) ?? 0} kg/yr`, color: "var(--good)" },
+                  { label: "PM2.5 Cut", value: `${c.pm25ImpactPercent ?? 0}%`, color: "var(--sky)" },
+                  { label: "Cost Saved", value: `₹${c.costSavingINRPerYear?.toFixed(0) ?? 0}/yr`, color: "var(--accent)" },
                 ].map((m) => (
-                  <div key={m.label} style={{ background: "var(--surface-2)", borderRadius: 8, padding: "0.5rem", textAlign: "center" }}>
-                    <div style={{ fontSize: "0.9rem", fontWeight: 700, color: m.color }}>{m.value}</div>
-                    <div style={{ fontSize: "0.68rem", color: "var(--text-3)" }}>{m.label}</div>
+                  <div key={m.label} style={{ background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 10, padding: "0.55rem", textAlign: "center" }}>
+                    <div className="font-display" style={{ fontSize: "0.95rem", fontWeight: 700, color: m.color }}>{m.value}</div>
+                    <div style={{ fontSize: "0.7rem", color: "var(--text-3)" }}>{m.label}</div>
                   </div>
                 ))}
               </div>
-              <p style={{ fontSize: "0.82rem", color: "#16a34a", marginBottom: "0.5rem" }}>✅ {c.healthBenefit}</p>
+              <p style={{ fontSize: "0.83rem", color: "var(--good)", marginBottom: "0.5rem", fontWeight: 500 }}>✅ {c.healthBenefit}</p>
               {c.implementationTips?.length > 0 && (
                 <ul style={{ listStyle: "none", padding: 0 }}>
                   {c.implementationTips.map((tip, j) => (
-                    <li key={j} style={{ fontSize: "0.78rem", color: "var(--text-2)", display: "flex", gap: "0.4rem" }}>
+                    <li key={j} style={{ fontSize: "0.8rem", color: "var(--text-2)", display: "flex", gap: "0.4rem", marginBottom: "0.2rem" }}>
                       <span style={{ color: "var(--sky)", flexShrink: 0 }}>•</span> {tip}
                     </li>
                   ))}

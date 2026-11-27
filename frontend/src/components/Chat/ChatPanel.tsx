@@ -63,18 +63,34 @@ export function ChatPanel({ profile, aqiData }: Props) {
       id="panel-chat"
       role="tabpanel"
       aria-label="AI Chat"
-      style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 180px)", maxHeight: 700, background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", boxShadow: "var(--shadow-md)", overflow: "hidden" }}
+      className="animate-fade-in"
+      style={{
+        display: "flex", flexDirection: "column",
+        height: "calc(100vh - 190px)", minHeight: 460, maxHeight: 720,
+        background: "var(--surface)", borderRadius: "var(--radius-lg)",
+        border: "1px solid var(--border)", boxShadow: "var(--shadow-md)",
+        overflow: "hidden",
+      }}
     >
       {/* Chat Header */}
-      <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(135deg, #f0f9ff, #e0f2fe)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Bot size={18} color="white" aria-hidden="true" />
+      <div style={{
+        padding: "1rem 1.25rem", borderBottom: "1px solid var(--border)",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        background: "var(--info-bg)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.7rem" }}>
+          <div style={{
+            width: 38, height: 38, borderRadius: "12px",
+            background: "var(--grad-brand)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 12px rgba(14, 165, 233, 0.3)",
+          }}>
+            <Bot size={19} color="white" aria-hidden="true" />
           </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>AirGuide AI</div>
-            <div style={{ fontSize: "0.73rem", color: "var(--sky-dark)", display: "flex", alignItems: "center", gap: "0.3rem" }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} aria-hidden="true" />
+            <div className="font-display" style={{ fontWeight: 700, fontSize: "0.98rem", color: "var(--text)" }}>AirGuide AI</div>
+            <div style={{ fontSize: "0.75rem", color: "var(--sky-dark)", display: "flex", alignItems: "center", gap: "0.35rem", fontWeight: 500 }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--good)", display: "inline-block" }} aria-hidden="true" />
               Powered by Gemini · {profile.location ?? "Your Location"}
               {aqiData && ` · AQI ${aqiData.aqi}`}
             </div>
@@ -82,7 +98,8 @@ export function ChatPanel({ profile, aqiData }: Props) {
         </div>
         <button
           onClick={clearChat}
-          style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.8rem", border: "1px solid var(--border)", borderRadius: 8, background: "var(--surface)", cursor: "pointer", fontSize: "0.78rem", color: "var(--text-3)" }}
+          className="ag-btn-secondary"
+          style={{ padding: "0.4rem 0.8rem", fontSize: "0.78rem" }}
           aria-label="Clear chat history"
         >
           <Trash2 size={13} aria-hidden="true" /> Clear
@@ -91,16 +108,21 @@ export function ChatPanel({ profile, aqiData }: Props) {
 
       {/* Quick prompts */}
       {messages.length <= 1 && (
-        <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)", background: "#f8fafc" }}>
-          <p style={{ fontSize: "0.75rem", color: "var(--text-3)", marginBottom: "0.5rem" }}>Quick questions:</p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+        <div style={{ padding: "0.85rem 1.1rem", borderBottom: "1px solid var(--border)", background: "var(--surface-2)" }}>
+          <p style={{ fontSize: "0.76rem", color: "var(--text-3)", marginBottom: "0.5rem", fontWeight: 500 }}>Quick questions:</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.45rem" }}>
             {QUICK_PROMPTS.map((p) => (
               <button
                 key={p}
                 onClick={() => { setInput(p); inputRef.current?.focus(); }}
-                style={{ padding: "0.3rem 0.7rem", borderRadius: 999, border: "1px solid var(--border)", background: "white", fontSize: "0.75rem", color: "var(--text-2)", cursor: "pointer", transition: "all 0.15s" }}
-                onMouseOver={(e) => { e.currentTarget.style.borderColor = "var(--sky)"; e.currentTarget.style.color = "var(--sky-dark)"; }}
-                onMouseOut={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-2)"; }}
+                style={{
+                  padding: "0.35rem 0.8rem", borderRadius: 999,
+                  border: "1px solid var(--border)", background: "var(--surface)",
+                  fontSize: "0.76rem", color: "var(--text-2)", cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+                onMouseOver={(e) => { e.currentTarget.style.borderColor = "var(--sky)"; e.currentTarget.style.color = "var(--sky-dark)"; e.currentTarget.style.background = "var(--sky-light)"; }}
+                onMouseOut={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-2)"; e.currentTarget.style.background = "var(--surface)"; }}
               >
                 {p}
               </button>
@@ -111,7 +133,7 @@ export function ChatPanel({ profile, aqiData }: Props) {
 
       {/* Messages */}
       <div
-        style={{ flex: 1, overflowY: "auto", padding: "1rem 1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}
+        style={{ flex: 1, overflowY: "auto", padding: "1.1rem 1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}
         role="log"
         aria-live="polite"
         aria-label="Chat messages"
@@ -125,21 +147,22 @@ export function ChatPanel({ profile, aqiData }: Props) {
             <div
               aria-hidden="true"
               style={{
-                width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
-                background: msg.role === "assistant" ? "linear-gradient(135deg, #0ea5e9, #0284c7)" : "linear-gradient(135deg, #64748b, #475569)",
+                width: 34, height: 34, borderRadius: "10px", flexShrink: 0,
+                background: msg.role === "assistant" ? "var(--grad-brand)" : "linear-gradient(135deg, #6366f1, #8b5cf6)",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}
             >
-              {msg.role === "assistant" ? <Bot size={15} color="white" aria-hidden="true" /> : <User size={15} color="white" aria-hidden="true" />}
+              {msg.role === "assistant" ? <Bot size={16} color="white" aria-hidden="true" /> : <User size={16} color="white" aria-hidden="true" />}
             </div>
-            <div style={{ maxWidth: "75%", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+            <div style={{ maxWidth: "78%", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
               <div
                 style={{
-                  padding: "0.75rem 1rem", borderRadius: msg.role === "user" ? "16px 4px 16px 16px" : "4px 16px 16px 16px",
-                  background: msg.role === "user" ? "linear-gradient(135deg, #0ea5e9, #0284c7)" : "var(--surface-2)",
-                  color: msg.role === "user" ? "white" : "var(--text)",
+                  padding: "0.8rem 1.05rem",
+                  borderRadius: msg.role === "user" ? "16px 4px 16px 16px" : "4px 16px 16px 16px",
+                  background: msg.role === "user" ? "var(--grad-btn)" : "var(--surface-2)",
+                  color: msg.role === "user" ? "#ffffff" : "var(--text)",
                   border: msg.role === "assistant" ? "1px solid var(--border)" : "none",
-                  fontSize: "0.88rem", lineHeight: 1.65,
+                  fontSize: "0.89rem", lineHeight: 1.65,
                   boxShadow: "var(--shadow)",
                 }}
               >
@@ -161,10 +184,10 @@ export function ChatPanel({ profile, aqiData }: Props) {
 
         {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
           <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
-            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Bot size={15} color="white" aria-hidden="true" />
+            <div style={{ width: 34, height: 34, borderRadius: "10px", background: "var(--grad-brand)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Bot size={16} color="white" aria-hidden="true" />
             </div>
-            <div style={{ background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: "4px 16px 16px 16px", padding: "0.75rem 1rem", display: "flex", gap: "0.3rem", alignItems: "center" }} role="status" aria-label="AirGuide is thinking">
+            <div style={{ background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: "4px 16px 16px 16px", padding: "0.8rem 1.05rem", display: "flex", gap: "0.35rem", alignItems: "center" }} role="status" aria-label="AirGuide is thinking">
               {[0, 0.2, 0.4].map((d, i) => (
                 <span key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--sky)", display: "inline-block", animation: `pulse 1.2s ${d}s ease-in-out infinite` }} aria-hidden="true" />
               ))}
@@ -173,7 +196,7 @@ export function ChatPanel({ profile, aqiData }: Props) {
         )}
 
         {error && (
-          <div role="alert" style={{ padding: "0.6rem 1rem", background: "#fef2f2", borderRadius: 8, border: "1px solid #fecaca", fontSize: "0.8rem", color: "#dc2626" }}>
+          <div role="alert" style={{ padding: "0.65rem 1rem", background: "var(--error-bg)", borderRadius: 10, border: "1px solid var(--error-border)", fontSize: "0.82rem", color: "var(--error-text)" }}>
             ⚠️ {error}
           </div>
         )}
@@ -181,8 +204,8 @@ export function ChatPanel({ profile, aqiData }: Props) {
       </div>
 
       {/* Input */}
-      <div style={{ padding: "0.75rem 1rem", borderTop: "1px solid var(--border)", background: "var(--surface)", display: "flex", gap: "0.5rem", alignItems: "flex-end" }}>
-        <label htmlFor="chat-input" className="sr-only" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden" }}>
+      <div style={{ padding: "0.85rem 1.1rem", borderTop: "1px solid var(--border)", background: "var(--surface)", display: "flex", gap: "0.6rem", alignItems: "flex-end" }}>
+        <label htmlFor="chat-input" className="sr-only">
           Type your air quality question
         </label>
         <textarea
@@ -195,27 +218,17 @@ export function ChatPanel({ profile, aqiData }: Props) {
           rows={1}
           disabled={isLoading}
           aria-label="Type your message"
+          className="ag-input"
           style={{
-            flex: 1, resize: "none", border: "1px solid var(--border)", borderRadius: 10,
-            padding: "0.65rem 0.9rem", fontSize: "0.88rem", fontFamily: "inherit",
-            background: isLoading ? "var(--surface-2)" : "var(--surface)",
-            outline: "none", lineHeight: 1.5, maxHeight: 100, overflowY: "auto",
-            transition: "border-color 0.2s",
+            flex: 1, resize: "none",
+            lineHeight: 1.5, maxHeight: 110, overflowY: "auto",
           }}
-          onFocus={(e) => (e.target.style.borderColor = "var(--sky)")}
-          onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
         />
         <button
           onClick={handleSend}
           disabled={!input.trim() || isLoading}
-          style={{
-            width: 42, height: 42, borderRadius: 10, border: "none",
-            background: !input.trim() || isLoading ? "var(--border)" : "linear-gradient(135deg, #0ea5e9, #0284c7)",
-            color: "white", cursor: !input.trim() || isLoading ? "not-allowed" : "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "background 0.2s",
-            flexShrink: 0,
-          }}
+          className="ag-btn-primary"
+          style={{ width: 44, height: 44, borderRadius: "12px", flexShrink: 0 }}
           aria-label="Send message"
         >
           <Send size={17} aria-hidden="true" />

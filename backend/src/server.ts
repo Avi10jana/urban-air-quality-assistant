@@ -97,7 +97,7 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 });
 
 // ─── Start (local / non-serverless) ───────────────────────────────────────────
-if (!process.env.VERCEL) {
+if (!process.env.VERCEL && process.env.NODE_ENV !== "test") {
   const server = app.listen(PORT, () => {
     console.log(`🌍 Urban Air Quality API running on http://localhost:${PORT}`);
     // Safe: does not log the key value

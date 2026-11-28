@@ -14,7 +14,14 @@ router.get("/", aqiRateLimiter, async (req, res) => {
   if (lat && lon) {
     const latNum = parseFloat(lat as string);
     const lonNum = parseFloat(lon as string);
-    if (isNaN(latNum) || isNaN(lonNum)) {
+    if (
+      isNaN(latNum) ||
+      isNaN(lonNum) ||
+      latNum < -90 ||
+      latNum > 90 ||
+      lonNum < -180 ||
+      lonNum > 180
+    ) {
       res.status(400).json({ success: false, error: "Invalid lat/lon values", timestamp: new Date().toISOString() });
       return;
     }

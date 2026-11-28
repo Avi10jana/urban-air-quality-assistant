@@ -1,6 +1,7 @@
 /**
  * Security middleware tests — input sanitisation and request ID
  */
+import { jest } from "@jest/globals";
 import { sanitizeBody, requestId } from "../src/middleware/security.js";
 import type { Request, Response, NextFunction } from "express";
 

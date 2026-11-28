@@ -1,26 +1,12 @@
 import { useRef, useEffect, useState } from "react";
 import type { UserProfile, AQIData } from "../../types";
 import { useChat } from "../../hooks/useChat";
+import { renderMarkdown } from "../../utils/markdown";
 import { Send, Trash2, Bot, User } from "lucide-react";
 
 interface Props {
   profile: Partial<UserProfile>;
   aqiData?: AQIData | null;
-}
-
-function renderMarkdown(text: string): string {
-  return text
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    .replace(/`(.+?)`/g, "<code>$1</code>")
-    .replace(/^### (.+)$/gm, "<h3>$1</h3>")
-    .replace(/^## (.+)$/gm, "<h2>$1</h2>")
-    .replace(/^# (.+)$/gm, "<h1>$1</h1>")
-    .replace(/^- (.+)$/gm, "<li>$1</li>")
-    .replace(/(<li>.*<\/li>\n?)+/g, (m) => `<ul>${m}</ul>`)
-    .replace(/\n\n/g, "</p><p>")
-    .replace(/^(?!<[hul])/gm, "")
-    .trim();
 }
 
 const QUICK_PROMPTS = [
@@ -41,7 +27,7 @@ export function ChatPanel({ profile, aqiData }: Props) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView?.({ behavior: "smooth" });
   }, [messages]);
 
   const handleSend = () => {

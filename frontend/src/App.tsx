@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { UserProfile, AppTab } from "./types";
 import { Header } from "./components/Header";
 import { TabNav } from "./components/TabNav";
@@ -9,6 +9,8 @@ import { ImpactPanel } from "./components/Impact/ImpactPanel";
 import { IndoorPanel } from "./components/Indoor/IndoorPanel";
 import { ProfileSetup } from "./components/Profile/ProfileSetup";
 import { useAQI } from "./hooks/useAQI";
+
+const PROFILE_STORAGE_KEY = "airguide-profile";
 
 const DEFAULT_PROFILE: UserProfile = {
   location: "Delhi",
@@ -22,20 +24,46 @@ const DEFAULT_PROFILE: UserProfile = {
   currentConcerns: ["smog", "PM2.5"],
 };
 
+function loadSavedProfile(): { profile: UserProfile; isSet: boolean } {
+  try {
+    const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+    if (!raw) return { profile: DEFAULT_PROFILE, isSet: false };
+    const parsed = JSON.parse(raw) as UserProfile;
+    if (parsed && typeof parsed.location === "string" && parsed.location.trim()) {
+      return { profile: parsed, isSet: true };
+    }
+  } catch {
+    // Ignore invalid stored JSON
+  }
+  return { profile: DEFAULT_PROFILE, isSet: false };
+}
+
 export default function App() {
-  const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
-  const [profileSet, setProfileSet] = useState(false);
+  const initial = loadSavedProfile();
+  const [profile, setProfile] = useState<UserProfile>(initial.profile);
+  const [profileSet, setProfileSet] = useState(initial.isSet);
   const [activeTab, setActiveTab] = useState<AppTab>("dashboard");
 
   const { data: aqiData, loading: aqiLoading, loadAQI } = useAQI(
     profileSet ? profile.location : undefined
   );
 
+  useEffect(() => {
+    if (profileSet && profile.location) {
+      loadAQI(profile.location);
+    }
+  }, [profileSet, profile.location, loadAQI]);
+
   /** Memoised so ProfileSetup re-renders are avoided. */
   const handleProfileSave = useCallback(
     (p: UserProfile) => {
       setProfile(p);
       setProfileSet(true);
+      try {
+        localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(p));
+      } catch {
+        // Ignore storage quota errors
+      }
       loadAQI(p.location);
     },
     [loadAQI]
@@ -56,6 +84,9 @@ export default function App() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
       <Header
         profile={profile}
         aqiData={aqiData}
